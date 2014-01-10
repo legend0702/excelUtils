@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import cn.zhuhongqing.excel.cell.Workbook;
 import cn.zhuhongqing.excel.exception.ExcelConvertException;
+import cn.zhuhongqing.excel.exception.ExcelShortCircuit;
 import cn.zhuhongqing.excel.utils.GenericUtils;
 
 public class ExcelTest {
@@ -42,6 +43,7 @@ public class ExcelTest {
 
 	@Test
 	public void test3() throws Exception {
-		
+		ExcelShortCircuit excelSC = new ExcelShortCircuit();
+		System.out.println(excelSC);
 	}
 }
