@@ -50,12 +50,15 @@ public class ExcelTest {
 				"类型异常");
 		ShortCircuit shortCircuit = new ShortCircuit();
 		shortCircuit.setShortCircuit(false);
-		shortCircuit.setShortSize(2);
+		shortCircuit.addShortKey(nullPointerException);
+		shortCircuit.setShortSize(3);
 
+		shortCircuit.addException("转换异常");
 		shortCircuit.addException(nullPointerException);
 		shortCircuit.addException(excelConvertException);
 
-		shortCircuit.addException("转换异常");
+		System.out.println(shortCircuit.hasException());
+		System.out.println(shortCircuit.getExceptionMessage());
 
 		// shortCircuit.getCause().printStackTrace();
 		// shortCircuit.fillInStackTrace().printStackTrace();
@@ -77,14 +80,19 @@ public class ExcelTest {
 	}
 
 	@Test
-	public void test5() throws ShortCircuit {
+	public void test5() {
 
 		NullPointerException nullPointerException = new NullPointerException(
 				"空指针");
 
 		ShortCircuit shortCircuit = new ShortCircuit();
 
-		shortCircuit.addException(nullPointerException);
+		try {
+
+			shortCircuit.addException(nullPointerException);
+		} catch (ShortCircuit e) {
+			System.out.println(e);
+		}
 
 		// System.out.println(shortCircuit.getExceptionMessage());
 
@@ -99,7 +107,11 @@ public class ExcelTest {
 		ShortCircuit s2 = new ShortCircuit("异常2", s1);
 		ShortCircuit s3 = new ShortCircuit("异常3", s2);
 
-		throw s3;
+		try {
+			throw s3;
+		} catch (ShortCircuit e) {
+			System.out.println(e);
+		}
 	}
 
 	@Test
@@ -115,14 +127,15 @@ public class ExcelTest {
 		ExcelConvertException numberException = new ExcelConvertException(
 				"数字类型异常");
 
-		ShortCircuit s1 = new ShortCircuit("异常1", nullPointerException);
-		ShortCircuit s2 = new ShortCircuit(s1.getMessage(), s1.getCause());
-		ShortCircuit s3 = new ShortCircuit(s2.getMessage(), numberException);
+		shortCircuit.setShortCircuit(false);
+		shortCircuit.setShortSize(20);
+		shortCircuit.addShortKey("短路异常");
+		shortCircuit.addShortKey(dateException);
 
-		// shortCircuit.addSuppressed(nullPointerException);
-		// shortCircuit.addSuppressed(dateException);
-		// shortCircuit.addSuppressed(numberException);
+		shortCircuit.addException(nullPointerException);
+		shortCircuit.addException("短路异常");
+		shortCircuit.addException(dateException);
+		shortCircuit.addException(numberException);
 
-		throw s3;
 	}
 }
