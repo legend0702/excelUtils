@@ -1,52 +1,75 @@
 package cn.zhuhongqing.excel.exception;
 
-import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
 
 import cn.zhuhongqing.excel.utils.GenericUtils;
 
 /**
  * 异常短路机制
  * 
- * 捕捉T类型的exception
+ * 捕捉Throwable
  * 
- * 抛出k类型的运行时异常
+ * 以运行时异常的形式刨出ShortCircuit
  * 
  * 默认短路
  * 
  * 无短路key
  * 
- * @param <K>
+ * 短路容量为0
  * 
- * @param <K>
  */
 
-public abstract class ShortCircuit<E extends Exception, R extends RuntimeException>
-		implements ShortException<E, R> {
+public class ShortCircuit extends RuntimeException {
 
-	private Class<E> catchException = null;
-	private Class<R> throwException = null;
+	private static final long serialVersionUID = 1L;
+	// 是否短路
 	private boolean shortCircuit = true;
+	// 短路容量
+	private int shortSize = 0;
+	// 短路key
 	private List<String> shortKey = new ArrayList<String>();
-	private List<E> exceptionList = new ArrayList<E>();
+	// 存放异常
+	private List<Throwable> throwableList = new ArrayList<Throwable>();
 
-	public void addException(String key, E exception) {
+	public ShortCircuit() {
+		super();
+	}
+
+	public ShortCircuit(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	public ShortCircuit(String message) {
+		super(message);
+	}
+
+	public ShortCircuit(Throwable cause) {
+		super(cause);
+	}
+
+	public void addThrowable(String key, Throwable exception) {
 		checkException(exception, key, null);
 	}
 
-	public void addException(String key, String message) {
-
+	public void addThrowable(String key, String message) {
+		checkException(null, key, message);
 	}
 
-	public void addException(E exception) {
+	public void addThrowable(Throwable exception) {
 		checkException(exception, null, null);
 	}
 
+	public void addThrowable(String message) {
+		checkException(null, null, message);
+	}
+
 	public boolean hasException() {
-		return (!getExceptionList().isEmpty());
+		return (!getThrowableList().isEmpty());
 	}
 
 	public void tryThrowException() {
@@ -57,40 +80,47 @@ public abstract class ShortCircuit<E extends Exception, R extends RuntimeExcepti
 
 	public String getExceptionMessage() {
 		StringBuffer stringBuffer = new StringBuffer();
-		for (E e : getExceptionList()) {
-			stringBuffer.append(e.getMessage());
-			stringBuffer.append("\r\n");
+		for (Throwable t : getThrowableList()) {
+			stringBuffer.append(t.getMessage());
+			stringBuffer.append(StringUtils.CR);
+			stringBuffer.append(StringUtils.LF);
 		}
 		return stringBuffer.toString();
 	}
 
-	private void throwRuntimeException(E exception, String message) {
-		throw createRuntimeException(exception, null);
-	}
-
-	private void checkException(E exception, String key, String message) {
+	private void checkException(Throwable throwable, String key, String message) {
 		if (isShortCircuit()) {
-			throwRuntimeException(exception, message);
+			throwRuntimeException(throwable, message);
 		} else {
-			if (isEmptyShortKey()) {
-				throwRuntimeException(exception, message);
-			}
-			if (keyContains(key)) {
-				throwRuntimeException(exception, message);
+			if (isEmptyShortSize() || isEmptyShortKey()) {
+				throwRuntimeException(throwable, message);
+			} else {
+				if (getShortSize() == getThrowableList().size()) {
+					throwRuntimeException(throwable, message);
+				}
+				if (keyContains(key)) {
+					throwRuntimeException(throwable, message);
+				}
 			}
 		}
 
-		if (exception != null) {
-			this.exceptionList.add(exception);
+		if (throwable != null) {
+			this.throwableList.add(throwable);
 			return;
 		}
-		// if (message != null) {
-		// this.exceptionList.add(createException(message));
-		// return;
-		// }
+
+		if (message != null) {
+			this.throwableList.add(createRuntimeException(null, message));
+			return;
+		}
 	}
 
-	private R createRuntimeException(E exception, String message) {
+	private void throwRuntimeException(Throwable exception, String message) {
+		throw createRuntimeException(exception, message);
+	}
+
+	private RuntimeException createRuntimeException(Throwable exception,
+			String message) {
 
 		try {
 
@@ -100,12 +130,12 @@ public abstract class ShortCircuit<E extends Exception, R extends RuntimeExcepti
 
 			constructorTypeAndParam.put(Throwable.class, exception);
 
-			return GenericUtils.autoCreateObject(getThrowExceptionType(),
+			return GenericUtils.autoCreateObject(this.getClass(),
 					constructorTypeAndParam);
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new RuntimeException(e);
+			throw new NullPointerException(e.getMessage());
 		}
 	}
 
@@ -126,14 +156,6 @@ public abstract class ShortCircuit<E extends Exception, R extends RuntimeExcepti
 		this.shortCircuit = shortCircuit;
 	}
 
-	public List<E> getExceptionList() {
-		return exceptionList;
-	}
-
-	public void setExceptionList(List<E> exceptionList) {
-		this.exceptionList = exceptionList;
-	}
-
 	public boolean isEmptyShortKey() {
 		return this.shortKey.isEmpty();
 	}
@@ -142,28 +164,24 @@ public abstract class ShortCircuit<E extends Exception, R extends RuntimeExcepti
 		this.shortKey.add(key);
 	}
 
-	@SuppressWarnings("unchecked")
-	public Class<E> getCatchExceptionType() {
-		if (catchException == null) {
-			ParameterizedType superClassParameterType = (ParameterizedType) this
-					.getClass().getGenericSuperclass();
-			Class<E> eClass = (Class<E>) superClassParameterType
-					.getActualTypeArguments()[0];
-			catchException = eClass;
-		}
-		return catchException;
+	public List<Throwable> getThrowableList() {
+		return throwableList;
 	}
 
-	@SuppressWarnings("unchecked")
-	public Class<R> getThrowExceptionType() {
-		if (throwException == null) {
-			ParameterizedType superClassParameterType = (ParameterizedType) this
-					.getClass().getGenericSuperclass();
-			Class<R> rClass = (Class<R>) superClassParameterType
-					.getActualTypeArguments()[1];
-			throwException = rClass;
-		}
-		return throwException;
+	public void setThrowableList(List<Throwable> throwableList) {
+		this.throwableList = throwableList;
+	}
+
+	public boolean isEmptyShortSize() {
+		return getShortSize() == 0;
+	}
+
+	public int getShortSize() {
+		return shortSize;
+	}
+
+	public void setShortSize(int shortSize) {
+		this.shortSize = shortSize;
 	}
 
 }
