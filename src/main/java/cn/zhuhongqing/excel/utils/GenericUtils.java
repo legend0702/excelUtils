@@ -213,6 +213,16 @@ public class GenericUtils {
 		throw new NoSuchMethodException("con not find a Constructor");
 	}
 
+	/**
+	 * 过滤空map
+	 * 
+	 * key为null 以及value为null的
+	 * 
+	 * @param targetMap
+	 *            目标map
+	 * @return
+	 */
+
 	public static <K, V> Map<K, V> filterMap(Map<K, V> targetMap) {
 		Map<K, V> filerMap = new HashMap<K, V>();
 		Iterator<Entry<K, V>> mapItr = targetMap.entrySet().iterator();

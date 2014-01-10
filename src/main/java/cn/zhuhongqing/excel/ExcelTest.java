@@ -49,13 +49,16 @@ public class ExcelTest {
 		ExcelConvertException excelConvertException = new ExcelConvertException(
 				"类型异常");
 		ShortCircuit shortCircuit = new ShortCircuit();
+		shortCircuit.setShortCircuit(false);
+		shortCircuit.setShortSize(2);
 
-		shortCircuit.addThrowable(nullPointerException);
-		shortCircuit.addThrowable(excelConvertException);
-		shortCircuit.addThrowable("转换异常");
+		shortCircuit.addException(nullPointerException);
+		shortCircuit.addException(excelConvertException);
+
+		shortCircuit.addException("转换异常");
 
 		// shortCircuit.getCause().printStackTrace();
-		shortCircuit.fillInStackTrace().printStackTrace();
+		// shortCircuit.fillInStackTrace().printStackTrace();
 		// System.out.println(shortCircuit.getStackTrace().length);
 	}
 
@@ -67,6 +70,59 @@ public class ExcelTest {
 		Constructor<ShortCircuit> constructor = ShortCircuit.class
 				.getConstructor(Throwable.class);
 
-		throw constructor.newInstance(nullPointerException);
+		ShortCircuit shortCircuit = constructor
+				.newInstance(nullPointerException);
+
+		System.out.println(shortCircuit);
+	}
+
+	@Test
+	public void test5() throws ShortCircuit {
+
+		NullPointerException nullPointerException = new NullPointerException(
+				"空指针");
+
+		ShortCircuit shortCircuit = new ShortCircuit();
+
+		shortCircuit.addException(nullPointerException);
+
+		// System.out.println(shortCircuit.getExceptionMessage());
+
+	}
+
+	@Test
+	public void test6() throws ShortCircuit {
+		NullPointerException nullPointerException = new NullPointerException(
+				"空指针");
+
+		ShortCircuit s1 = new ShortCircuit("异常1", nullPointerException);
+		ShortCircuit s2 = new ShortCircuit("异常2", s1);
+		ShortCircuit s3 = new ShortCircuit("异常3", s2);
+
+		throw s3;
+	}
+
+	@Test
+	public void test7() throws ShortCircuit {
+		ShortCircuit shortCircuit = new ShortCircuit();
+
+		NullPointerException nullPointerException = new NullPointerException(
+				"空指针");
+
+		ExcelConvertException dateException = new ExcelConvertException(
+				"日期类型异常");
+
+		ExcelConvertException numberException = new ExcelConvertException(
+				"数字类型异常");
+
+		ShortCircuit s1 = new ShortCircuit("异常1", nullPointerException);
+		ShortCircuit s2 = new ShortCircuit(s1.getMessage(), s1.getCause());
+		ShortCircuit s3 = new ShortCircuit(s2.getMessage(), numberException);
+
+		// shortCircuit.addSuppressed(nullPointerException);
+		// shortCircuit.addSuppressed(dateException);
+		// shortCircuit.addSuppressed(numberException);
+
+		throw s3;
 	}
 }

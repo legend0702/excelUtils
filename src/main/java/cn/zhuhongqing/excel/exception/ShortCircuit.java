@@ -1,7 +1,10 @@
 package cn.zhuhongqing.excel.exception;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -12,7 +15,7 @@ import cn.zhuhongqing.excel.utils.GenericUtils;
 /**
  * 异常短路机制
  * 
- * 捕捉Throwable
+ * 捕捉Exception
  * 
  * 以运行时异常的形式刨出ShortCircuit
  * 
@@ -24,63 +27,98 @@ import cn.zhuhongqing.excel.utils.GenericUtils;
  * 
  */
 
-public class ShortCircuit extends RuntimeException {
+public class ShortCircuit extends Exception {
 
 	private static final long serialVersionUID = 1L;
 	// 是否短路
-	private boolean shortCircuit = true;
+	protected boolean shortCircuit = true;
 	// 短路容量
-	private int shortSize = 0;
+	protected int shortSize = 0;
 	// 短路key
-	private List<String> shortKey = new ArrayList<String>();
+	protected List<Object> shortKey = new ArrayList<Object>(0);
 	// 存放异常
-	private List<Throwable> throwableList = new ArrayList<Throwable>();
+	protected List<Exception> throwableList = new ArrayList<Exception>(0);
+	// 存放异常堆栈
+	protected List<StackTraceElement> stackTraceList = new ArrayList<StackTraceElement>(
+			0);
 
 	public ShortCircuit() {
 		super();
-	}
-
-	public ShortCircuit(String message, Throwable cause) {
-		super(message, cause);
 	}
 
 	public ShortCircuit(String message) {
 		super(message);
 	}
 
-	public ShortCircuit(Throwable cause) {
-		super(cause);
+	public ShortCircuit(Throwable throwable) {
+		super(throwable);
 	}
 
-	public void addThrowable(String key, Throwable exception) {
-		checkException(exception, key, null);
+	public ShortCircuit(String message, Throwable throwable) {
+		super(message, throwable);
 	}
 
-	public void addThrowable(String key, String message) {
-		checkException(null, key, message);
-	}
-
-	public void addThrowable(Throwable exception) {
+	public void addException(Exception exception) throws ShortCircuit {
 		checkException(exception, null, null);
 	}
 
-	public void addThrowable(String message) {
+	public void addException(String message) throws ShortCircuit {
 		checkException(null, null, message);
 	}
 
-	public boolean hasException() {
-		return (!getThrowableList().isEmpty());
+	public void addException(Object shortKey, Exception exception)
+			throws ShortCircuit {
+		checkException(exception, shortKey, null);
 	}
 
-	public void tryThrowException() {
+	public void addException(Object shortKey, String message)
+			throws ShortCircuit {
+		checkException(null, shortKey, message);
+	}
+
+	public boolean hasException() {
+		return (!getExceptionList().isEmpty());
+	}
+
+	public void tryThrowException() throws ShortCircuit {
 		if (hasException()) {
-			throw createRuntimeException(null, getExceptionMessage());
+			throw this;
 		}
+	}
+
+	@Override
+	public void printStackTrace() {
+		printStackTrace(System.err);
+	}
+
+	@Override
+	public void printStackTrace(PrintStream s) {
+		Iterator<Exception> itr = getExceptionList().iterator();
+		while (itr.hasNext()) {
+			printEnclosedStackTrace(s, itr.next());
+		}
+	}
+
+	private void printEnclosedStackTrace(PrintStream s, Exception exception) {
+		StackTraceElement[] trace = exception.getStackTrace();
+		int m = trace.length - 1, n = trace.length - 1;
+		while (m >= 0 && n >= 0 && trace[m].equals(trace[n])) {
+			m--;
+			n--;
+		}
+		int framesInCommon = trace.length - 1 - m;
+
+		s.println("Caused by: " + this);
+		for (int i = 0; i <= m; i++)
+			s.println("\tat " + trace[i]);
+		if (framesInCommon != 0)
+			s.println("\t... " + framesInCommon + " more");
+
 	}
 
 	public String getExceptionMessage() {
 		StringBuffer stringBuffer = new StringBuffer();
-		for (Throwable t : getThrowableList()) {
+		for (Exception t : getExceptionList()) {
 			stringBuffer.append(t.getMessage());
 			stringBuffer.append(StringUtils.CR);
 			stringBuffer.append(StringUtils.LF);
@@ -88,64 +126,61 @@ public class ShortCircuit extends RuntimeException {
 		return stringBuffer.toString();
 	}
 
-	private void checkException(Throwable throwable, String key, String message) {
+	protected void checkException(Exception exception, Object shortKey,
+			String message) throws ShortCircuit {
+		// 如果有异常 直接存入
+		if (exception != null) {
+			stackTraceList.addAll(Arrays.asList(exception.getStackTrace()));
+			this.throwableList.add(exception);
+			// 如果只有消息 则创建自身,再存入
+		} else if (message != null) {
+			ShortCircuit shortCircuit = createShortCircuit(null, message);
+			stackTraceList.addAll(Arrays.asList(shortCircuit.getStackTrace()));
+			this.throwableList.add(shortCircuit);
+		}
+
+		// 短路直接抛异常
 		if (isShortCircuit()) {
-			throwRuntimeException(throwable, message);
-		} else {
-			if (isEmptyShortSize() || isEmptyShortKey()) {
-				throwRuntimeException(throwable, message);
-			} else {
-				if (getShortSize() == getThrowableList().size()) {
-					throwRuntimeException(throwable, message);
-				}
-				if (keyContains(key)) {
-					throwRuntimeException(throwable, message);
-				}
-			}
+			tryThrowException();
 		}
-
-		if (throwable != null) {
-			this.throwableList.add(throwable);
+		// 不短路的情况
+		// 如果容量是空且没有短路key 则直接返回 什么也不做
+		if (isEmptyShortSize() && isEmptyShortKey()) {
 			return;
 		}
 
-		if (message != null) {
-			this.throwableList.add(createRuntimeException(null, message));
-			return;
+		// 如果有短路key 且匹配到了 直接抛出异常
+		if (keyContains(shortKey) && (!isEmptyShortKey())) {
+			tryThrowException();
 		}
+
+		// 如果容量满了直接抛出
+		if (getShortSize() == getExceptionList().size()) {
+			tryThrowException();
+		}
+
 	}
 
-	private void throwRuntimeException(Throwable exception, String message) {
-		throw createRuntimeException(exception, message);
-	}
-
-	private RuntimeException createRuntimeException(Throwable exception,
+	protected ShortCircuit createShortCircuit(Exception exception,
 			String message) {
 
+		Map<Class<?>, Object> constructorTypeAndParam = new HashMap<Class<?>, Object>();
+
+		constructorTypeAndParam.put(String.class, message);
+
+		constructorTypeAndParam.put(Throwable.class, exception);
+
 		try {
-
-			Map<Class<?>, Object> constructorTypeAndParam = new HashMap<Class<?>, Object>();
-
-			constructorTypeAndParam.put(String.class, message);
-
-			constructorTypeAndParam.put(Throwable.class, exception);
-
 			return GenericUtils.autoCreateObject(this.getClass(),
 					constructorTypeAndParam);
-
 		} catch (Exception e) {
-			e.printStackTrace();
-			throw new NullPointerException(e.getMessage());
+			throw new RuntimeException(e);
 		}
+
 	}
 
-	@Override
-	public String toString() {
-		return getExceptionMessage();
-	}
-
-	public boolean keyContains(String key) {
-		return shortKey.contains(key);
+	public boolean keyContains(Object shortKey) {
+		return this.shortKey.contains(shortKey);
 	}
 
 	public boolean isShortCircuit() {
@@ -160,15 +195,15 @@ public class ShortCircuit extends RuntimeException {
 		return this.shortKey.isEmpty();
 	}
 
-	public void addShortKey(String key) {
-		this.shortKey.add(key);
+	public void addShortKey(Object shortKey) {
+		this.shortKey.add(shortKey);
 	}
 
-	public List<Throwable> getThrowableList() {
+	public List<Exception> getExceptionList() {
 		return throwableList;
 	}
 
-	public void setThrowableList(List<Throwable> throwableList) {
+	public void setExceptionList(List<Exception> throwableList) {
 		this.throwableList = throwableList;
 	}
 
