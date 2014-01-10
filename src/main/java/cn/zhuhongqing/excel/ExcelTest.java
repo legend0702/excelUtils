@@ -140,4 +140,9 @@ public class ExcelTest {
 		shortCircuit.addException(numberException);
 
 	}
+
+	@Test
+	public void test8() {
+		System.out.println("Hello Git");
+	}
 }
