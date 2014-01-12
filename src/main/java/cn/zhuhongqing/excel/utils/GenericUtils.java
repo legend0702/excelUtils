@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.StringTokenizer;
 
 import org.apache.commons.lang3.math.NumberUtils;
 
@@ -233,6 +234,36 @@ public class GenericUtils {
 			}
 		}
 		return filerMap;
+	}
+
+	/**
+	 * 数据库字段于bean字段中的对应关系: 数据库字典变小写 然后下划线后面第一个大写
+	 * 
+	 * 例:DB_KEY ==> dbKey
+	 * 
+	 * @param str
+	 * @param split
+	 * @return str
+	 */
+
+	public static String splitFirstUpSubLine(String str, String split) {
+
+		String strTemp = "";
+
+		StringTokenizer stringTokenizer = new StringTokenizer(str, split);
+
+		while (stringTokenizer.hasMoreElements()) {
+			if (strTemp.length() < 1) {
+				strTemp = stringTokenizer.nextToken();
+			} else {
+				strTemp += StringUtils
+						.firstToUpper(stringTokenizer.nextToken());
+			}
+		}
+		if (StringUtils.isNull(strTemp)) {
+			return str;
+		}
+		return strTemp;
 	}
 
 	/**

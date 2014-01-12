@@ -17,6 +17,17 @@ public class StringUtils {
 
 	public static final String DEFAULT_REG = ",";
 
+	public static boolean isNull(Object obj) {
+		if (obj == null) {
+			return true;
+		}
+		if (obj instanceof String) {
+			return isNull((String) obj);
+		} else {
+			return isNull(obj.toString());
+		}
+	}
+
 	/**
 	 * 判断一个字符串是否为null或者长度为0
 	 * 

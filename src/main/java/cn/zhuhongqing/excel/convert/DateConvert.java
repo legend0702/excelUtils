@@ -4,7 +4,6 @@ import java.util.Date;
 
 import org.apache.poi.ss.usermodel.Cell;
 
-import cn.zhuhongqing.excel.exception.ExcelConvertException;
 import cn.zhuhongqing.excel.utils.GenericUtils;
 
 public class DateConvert extends AbstractExcelConvert {
@@ -43,7 +42,7 @@ public class DateConvert extends AbstractExcelConvert {
 				}
 			}
 		}
-		throw new ExcelConvertException("日期类型数据转换失败");
+		throw new ExcelConvertException("日期类型数据格式有误!请调整!");
 	}
 
 	@Override

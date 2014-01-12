@@ -1,5 +1,7 @@
 package cn.zhuhongqing.excel;
 
+import org.apache.poi.hssf.usermodel.HSSFDateUtil;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
@@ -200,7 +202,12 @@ public class XSSFExcelReader {
 		}
 		case org.apache.poi.ss.usermodel.Cell.CELL_TYPE_NUMERIC: {
 			cell.setType(CellValueType.IS_NUMERIC);
-			cell.setValue(poiCell.getNumericCellValue());
+			if (DateUtil.isCellDateFormatted(poiCell)) {
+				cell.setValue(HSSFDateUtil.getJavaDate(poiCell
+						.getNumericCellValue()));
+			} else {
+				cell.setValue(poiCell.getNumericCellValue());
+			}
 			break;
 		}
 		case org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING: {

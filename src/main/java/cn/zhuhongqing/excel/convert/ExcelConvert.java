@@ -2,8 +2,6 @@ package cn.zhuhongqing.excel.convert;
 
 import java.util.List;
 
-import cn.zhuhongqing.excel.exception.ExcelConvertException;
-
 /**
  * excel转换成java
  * 

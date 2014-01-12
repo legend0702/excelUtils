@@ -2,14 +2,12 @@ package cn.zhuhongqing.excel.convert;
 
 import org.apache.poi.ss.usermodel.Cell;
 
-import cn.zhuhongqing.excel.exception.ExcelConvertException;
 import cn.zhuhongqing.excel.utils.GenericUtils;
 
 public class NumberConvert extends AbstractExcelConvert {
 
 	@Override
 	public Object excelToJava(Object value) throws ExcelConvertException {
-
 		if (isTrueType(value)) {
 			if (value instanceof Number) {
 				return value;
@@ -20,7 +18,7 @@ public class NumberConvert extends AbstractExcelConvert {
 				return returnNumber;
 			}
 		}
-		throw new ExcelConvertException("数字类型数据转换失败");
+		throw new ExcelConvertException("数字类型数据格式有误!请调整!");
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-package cn.zhuhongqing.excel.exception;
+package cn.zhuhongqing.excel.convert;
 
 public class ExcelConvertException extends Exception {
 

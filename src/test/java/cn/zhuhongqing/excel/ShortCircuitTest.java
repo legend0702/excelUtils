@@ -1,32 +1,16 @@
 package cn.zhuhongqing.excel;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Test;
 
-import cn.zhuhongqing.excel.cell.Workbook;
-import cn.zhuhongqing.excel.exception.ExcelConvertException;
-
+import cn.zhuhongqing.excel.convert.ExcelConvertException;
 import cn.zhuhongqing.excel.exception.ShortCircuit;
 import cn.zhuhongqing.excel.utils.GenericUtils;
 
-public class ExcelTest {
-
-	@Test
-	public void test1() throws Exception {
-		String filePath = "D:/2013-12-28.xlsx";
-		File excelFile = new File(filePath);
-		System.out.println(excelFile.getName());
-		FileInputStream input = new FileInputStream(excelFile);
-		Workbook workbook = PoiExcelReader.read(input);
-		System.out.println(workbook.getWorksheets().get(0).getCells());
-		input.close();
-		System.out.println("OK");
-	}
+public class ShortCircuitTest {
 
 	@Test
 	public void test2() throws Exception {

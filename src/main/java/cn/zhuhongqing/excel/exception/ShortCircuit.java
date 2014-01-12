@@ -34,12 +34,8 @@ import cn.zhuhongqing.excel.utils.GenericUtils;
 public class ShortCircuit extends Exception {
 
 	private static final long serialVersionUID = 1L;
-	// 是否短路
-	protected boolean shortCircuit = true;
-	// 短路容量
-	protected int shortSize = 0;
-	// 短路key
-	protected List<Object> shortKey = new ArrayList<Object>(0);
+
+	private Options options = new Options();
 	// 存放异常
 	protected List<Exception> throwableList = new ArrayList<Exception>(0);
 
@@ -241,7 +237,7 @@ public class ShortCircuit extends Exception {
 		constructorTypeAndParam.put(Throwable.class, exception);
 
 		try {
-			return GenericUtils.autoCreateObject(this.getClass(),
+			return GenericUtils.autoCreateObject(ShortCircuit.class,
 					constructorTypeAndParam);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -266,23 +262,23 @@ public class ShortCircuit extends Exception {
 	}
 
 	public boolean keyContains(Object shortKey) {
-		return this.shortKey.contains(shortKey);
+		return options.getShortKey().contains(shortKey);
 	}
 
 	public boolean isShortCircuit() {
-		return shortCircuit;
+		return options.isShortCircuit();
 	}
 
 	public void setShortCircuit(boolean shortCircuit) {
-		this.shortCircuit = shortCircuit;
+		options.setShortCircuit(shortCircuit);
 	}
 
 	public boolean isEmptyShortKey() {
-		return this.shortKey.isEmpty();
+		return options.getShortKey().isEmpty();
 	}
 
 	public void addShortKey(Object shortKey) {
-		this.shortKey.add(shortKey);
+		options.getShortKey().add(shortKey);
 	}
 
 	public List<Exception> getExceptionList() {
@@ -298,11 +294,11 @@ public class ShortCircuit extends Exception {
 	}
 
 	public int getShortSize() {
-		return shortSize;
+		return options.getShortSize();
 	}
 
 	public void setShortSize(int shortSize) {
-		this.shortSize = shortSize;
+		options.setShortSize(shortSize);
 	}
 
 	public String getExceptionMessage() {
@@ -319,6 +315,55 @@ public class ShortCircuit extends Exception {
 	public String toString() {
 		printStackTrace();
 		return "";
+	}
+
+	public Options getOptions() {
+		return options;
+	}
+
+	public void setOptions(Options options) {
+		this.options = options;
+	}
+
+	/**
+	 * 短路机制的配置
+	 * 
+	 * @author zhq mail:qwepoidjdj(a)hotmail.com
+	 * @since 1.6
+	 * 
+	 */
+
+	public static class Options {
+		// 是否短路
+		private boolean shortCircuit = true;
+		// 短路容量
+		private int shortSize = 0;
+		// 短路key
+		private List<Object> shortKey = new ArrayList<Object>(0);
+
+		public boolean isShortCircuit() {
+			return shortCircuit;
+		}
+
+		public void setShortCircuit(boolean shortCircuit) {
+			this.shortCircuit = shortCircuit;
+		}
+
+		public int getShortSize() {
+			return shortSize;
+		}
+
+		public void setShortSize(int shortSize) {
+			this.shortSize = shortSize;
+		}
+
+		public List<Object> getShortKey() {
+			return shortKey;
+		}
+
+		public void setShortKey(List<Object> shortKey) {
+			this.shortKey = shortKey;
+		}
 	}
 
 }
