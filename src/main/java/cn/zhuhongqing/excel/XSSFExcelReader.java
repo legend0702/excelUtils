@@ -203,6 +203,7 @@ public class XSSFExcelReader {
 		case org.apache.poi.ss.usermodel.Cell.CELL_TYPE_NUMERIC: {
 			cell.setType(CellValueType.IS_NUMERIC);
 			if (DateUtil.isCellDateFormatted(poiCell)) {
+				cell.setType(CellValueType.IS_DATE_TIME);
 				cell.setValue(HSSFDateUtil.getJavaDate(poiCell
 						.getNumericCellValue()));
 			} else {

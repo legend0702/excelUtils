@@ -102,16 +102,21 @@ public class ExcelTest {
 	}
 
 	@Test
-	public void test2() throws ShortCircuit, ExcelConvertException {
+	public void test2() {
 		// ExcelData excelData = ExcelOperationCenter
 		// .resolveAndConvertAndCheckExcelData(excelFile, prop);
 
-		ExcelData excelData = ExcelOperationCenter.resolveAndConvertExcelData(
-				excelFile, prop);
+		ExcelData excelData = null;
+		try {
+			excelData = ExcelOperationCenter
+					.resolveAndConvertAndCheckExcelData(excelFile, prop);
+		} catch (ShortCircuit e) {
+			System.out.println(e.getExceptionMessage());
+		}
 
-		// System.out.println(excelData.getExcelData().size());
-		// System.out.println(excelData.getExcelShortCircuit()
-		// .getExceptionMessage());
+		System.out.println(excelData.getExcelData().size());
+		System.out.println(excelData.getExcelShortCircuit()
+				.getExceptionMessage());
 
 	}
 }

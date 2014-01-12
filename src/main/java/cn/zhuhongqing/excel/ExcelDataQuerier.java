@@ -19,13 +19,35 @@ import cn.zhuhongqing.excel.data.IDataRow;
 
 public class ExcelDataQuerier {
 
+	/**
+	 * 返回List<Map<Key,Cell>>
+	 * 
+	 * @param file
+	 *            excelFile
+	 * @param comparMap
+	 *            Key列头
+	 * @return
+	 */
+
 	public static List<Map<String, Cell>> getCellList(File file,
 			Map<String, String> comparMap) {
+
+		return getExcelList(file, comparMap, Cell.class);
+	}
+
+	public static List<Map<String, Object>> getValueList(File file,
+			Map<String, String> comparMap) {
+		return getExcelList(file, comparMap, Object.class);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> List<Map<String, T>> getExcelList(File file,
+			Map<String, String> comparMap, Class<T> returnType) {
 		// 创建excel
 		Workbook wookbook = ExcelReader.readQuietly(file);
 		// 返回的数据
 		// key为comparMap的value 值为comparMap的key对应的cell
-		List<Map<String, Cell>> cellList = new ArrayList<Map<String, Cell>>();
+		List<Map<String, T>> cellList = new ArrayList<Map<String, T>>();
 		// 默认第一个sheet
 		Worksheet firstSheet = wookbook.getSheet(0);
 		// 默认第一列为属性名头列
@@ -35,51 +57,24 @@ public class ExcelDataQuerier {
 		// 由于第一列默认为名称列
 		// 故从第二列开始才是数据
 		for (int i = 1; i < firstSheet.getRowCount(); i++) {
-			Map<String, Cell> cellMap = new HashMap<String, Cell>();
+			Row row = firstSheet.getRow(i);
+			Map<String, T> cellMap = new HashMap<String, T>();
 			Iterator<Entry<Integer, String>> indexItr = indexMap.entrySet()
 					.iterator();
 			// 迭代序列map,将需要的cell取出来存入cellMap
 			while (indexItr.hasNext()) {
 				Entry<Integer, String> indexEntry = indexItr.next();
-				Row row = firstSheet.getCells().getRowCollection().getRow(i);
 				Integer cellIndex = indexEntry.getKey();
 				if (cellIndex < row.getCount()) {
 					Cell poiCell = row.getCell(cellIndex);
-					cellMap.put(indexEntry.getValue(), poiCell);
-				}
-			}
-			cellList.add(cellMap);
-		}
-		return cellList;
-	}
-
-	public static List<Map<String, Object>> getValueList(File file,
-			Map<String, String> comparMap) {
-		// 创建excel
-		Workbook wookbook = ExcelReader.readQuietly(file);
-		// 返回的数据
-		// key为comparMap的value 值为comparMap的key对应的cellValue
-		List<Map<String, Object>> cellList = new ArrayList<Map<String, Object>>();
-		// 默认第一个sheet
-		Worksheet firstSheet = wookbook.getSheet(0);
-		// 默认第一列为属性名头列
-		Row nameRow = firstSheet.getRow(0);
-		// 存放序列跟对应comparMap的value
-		Map<Integer, String> indexMap = getIndexMap(nameRow, comparMap);
-		// 由于第一列默认为名称列
-		// 故从第二列开始才是数据
-		for (int i = 1; i < firstSheet.getRowCount(); i++) {
-			Map<String, Object> cellMap = new HashMap<String, Object>();
-			Iterator<Entry<Integer, String>> indexItr = indexMap.entrySet()
-					.iterator();
-			// 迭代序列map,将需要的cellValue取出来存入cellMap
-			while (indexItr.hasNext()) {
-				Entry<Integer, String> indexEntry = indexItr.next();
-				Row row = firstSheet.getCells().getRowCollection().getRow(i);
-				Integer cellIndex = indexEntry.getKey();
-				if (cellIndex < row.getCount()) {
-					Cell poiCell = row.getCell(cellIndex);
-					cellMap.put(indexEntry.getValue(), poiCell.getValue());
+					// 如果returnType是Cell类型
+					if (returnType.equals(Cell.class)) {
+						cellMap.put(indexEntry.getValue(), (T) poiCell);
+					} else {
+						// 不然把值放入
+						cellMap.put(indexEntry.getValue(),
+								(T) poiCell.getValue());
+					}
 				}
 			}
 			cellList.add(cellMap);

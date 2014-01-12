@@ -83,22 +83,28 @@ public class ExcelOperationCenter {
 
 		Iterator<Map<String, Cell>> cellItr = cellList.iterator();
 		while (cellItr.hasNext()) {
-			Map<String, Object> colMap = new HashMap<String, Object>();
 			Map<String, Cell> cellMap = cellItr.next();
+			if (cellMap.isEmpty()) {
+				continue;
+			}
+			Map<String, Object> colMap = new HashMap<String, Object>();
 			Iterator<Entry<String, Cell>> cellMapItr = cellMap.entrySet()
 					.iterator();
 			while (cellMapItr.hasNext()) {
 				Entry<String, Cell> cellEntry = cellMapItr.next();
 				String cellName = cellEntry.getKey();
 				Cell entryCell = cellEntry.getValue();
-				if (StringUtils.isNull(entryCell.getValue())) {
+				Object orginCellValue = entryCell.getValue();
+				if (orginCellValue != null && orginCellValue instanceof String) {
+					orginCellValue = ((String) orginCellValue).trim();
+				}
+				if (StringUtils.isNull(orginCellValue)) {
 					continue;
 				}
 				try {
-					colMap.put(
-							GenericUtils.splitFirstUpSubLine(cellName, "_"),
+					colMap.put(GenericUtils.splitFirstUpSubLine(cellName, "_"),
 							excelConvertCenter.excelToJava(cellName,
-									entryCell.getValue()));
+									orginCellValue));
 				} catch (ExcelConvertException e) {
 					switch (excelOperationType) {
 					case ConvertThrow:
@@ -143,6 +149,10 @@ public class ExcelOperationCenter {
 						break;
 					}
 				}
+			}
+			// 过滤空Map
+			if (colMap.isEmpty()) {
+				continue;
 			}
 			colList.add(colMap);
 		}
