@@ -42,18 +42,22 @@ public class ShortCircuit extends Exception {
 	// 提供构造方法
 	public ShortCircuit() {
 		super();
+		throwableList.add(this);
 	}
 
 	public ShortCircuit(String message) {
 		super(message);
+		throwableList.add(this);
 	}
 
 	public ShortCircuit(Throwable throwable) {
 		super(throwable);
+		throwableList.add(this);
 	}
 
 	public ShortCircuit(String message, Throwable throwable) {
 		super(message, throwable);
+		throwableList.add(this);
 	}
 
 	/**

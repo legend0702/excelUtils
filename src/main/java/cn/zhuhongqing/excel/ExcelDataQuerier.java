@@ -1,6 +1,7 @@
 package cn.zhuhongqing.excel;
 
 import java.io.File;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -17,6 +18,14 @@ import cn.zhuhongqing.excel.data.DataRow;
 import cn.zhuhongqing.excel.data.IDataModel;
 import cn.zhuhongqing.excel.data.IDataRow;
 
+/**
+ * 主要处理excel数据的读取
+ * 
+ * @author zhq mail:qwepoidjdj(a)hotmail.com
+ * @version 1.6
+ * 
+ */
+
 public class ExcelDataQuerier {
 
 	/**
@@ -27,22 +36,74 @@ public class ExcelDataQuerier {
 	 * @param comparMap
 	 *            Key列头
 	 * @return
+	 * @throws ExcelReaderException
 	 */
 
 	public static List<Map<String, Cell>> getCellList(File file,
-			Map<String, String> comparMap) {
+			Map<String, String> comparMap) throws ExcelReaderException {
 
-		return getExcelList(file, comparMap, Cell.class);
+		return getExcelList(file, comparMap, true, Cell.class);
 	}
 
+	/**
+	 * 返回List<Map<Key,Cell>>
+	 * 
+	 * @param file
+	 *            excelFile
+	 * @param comparMap
+	 *            Key列头
+	 * @param checkcompar
+	 *            是否校验列名一致性
+	 * @return
+	 * @throws ExcelReaderException
+	 */
+
+	public static List<Map<String, Cell>> getCellList(File file,
+			Map<String, String> comparMap, boolean checkcompar)
+			throws ExcelReaderException {
+
+		return getExcelList(file, comparMap, checkcompar, Cell.class);
+	}
+
+	/**
+	 * 返回List<Map<Key,Object{@link Cell#getValue()}>>
+	 * 
+	 * @param file
+	 *            excelFile
+	 * @param comparMap
+	 *            Key列头
+	 * @param checkcompar
+	 *            是否校验列名一致性
+	 * @return
+	 * @throws ExcelReaderException
+	 */
+
 	public static List<Map<String, Object>> getValueList(File file,
-			Map<String, String> comparMap) {
-		return getExcelList(file, comparMap, Object.class);
+			Map<String, String> comparMap) throws ExcelReaderException {
+		return getExcelList(file, comparMap, true, Object.class);
+	}
+
+	/**
+	 * 返回List<Map<Key,Object{@link Cell#getValue()}>>
+	 * 
+	 * @param file
+	 *            excelFile
+	 * @param comparMap
+	 *            Key列头
+	 * @return
+	 * @throws ExcelReaderException
+	 */
+
+	public static List<Map<String, Object>> getValueList(File file,
+			Map<String, String> comparMap, boolean checkcompar)
+			throws ExcelReaderException {
+		return getExcelList(file, comparMap, checkcompar, Object.class);
 	}
 
 	@SuppressWarnings("unchecked")
 	private static <T> List<Map<String, T>> getExcelList(File file,
-			Map<String, String> comparMap, Class<T> returnType) {
+			Map<String, String> comparMap, boolean checkcompar,
+			Class<T> returnType) throws ExcelReaderException {
 		// 创建excel
 		Workbook wookbook = ExcelReader.readQuietly(file);
 		// 返回的数据
@@ -53,7 +114,8 @@ public class ExcelDataQuerier {
 		// 默认第一列为属性名头列
 		Row nameRow = firstSheet.getRow(0);
 		// 存放序列跟对应comparMap的value
-		Map<Integer, String> indexMap = getIndexMap(nameRow, comparMap);
+		Map<Integer, String> indexMap = getIndexMap(nameRow, comparMap,
+				checkcompar);
 		// 由于第一列默认为名称列
 		// 故从第二列开始才是数据
 		for (int i = 1; i < firstSheet.getRowCount(); i++) {
@@ -86,12 +148,18 @@ public class ExcelDataQuerier {
 	 * 创建存放序列跟对应comparMap#value的IndexMap
 	 * 
 	 * @param nameRow
+	 *            名称列 暂且默认第一列
 	 * @param comparMap
+	 *            对应列名的key
+	 * @param checkcompar
+	 *            是否check列名跟key一致性
 	 * @return
+	 * @throws ExcelReaderException
 	 */
 
 	private static Map<Integer, String> getIndexMap(Row nameRow,
-			Map<String, String> comparMap) {
+			Map<String, String> comparMap, boolean checkcompar)
+			throws ExcelReaderException {
 		// 存放序列跟对应comparMap的value
 		Map<Integer, String> indexMap = new HashMap<Integer, String>();
 		// 默认第一个sheet
@@ -105,6 +173,10 @@ public class ExcelDataQuerier {
 				}
 			}
 		}
+		if (checkcompar)
+			if (!(indexMap.size() == comparMap.size())) {
+				throw new ExcelReaderException("上传的excel于当前模版不匹配!请重新下在模版!");
+			}
 		return indexMap;
 	}
 

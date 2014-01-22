@@ -46,7 +46,7 @@ public class ExcelTest {
 	}
 
 	@Test
-	public void test1() throws ShortCircuit {
+	public void test1() throws ShortCircuit, ExcelReaderException {
 		System.out.println("Test Start!");
 
 		ExcelConvertCenter excelOperationCenter = ExcelConvertCenter
@@ -111,8 +111,12 @@ public class ExcelTest {
 			excelData = ExcelOperationCenter
 					.resolveAndConvertAndCheckExcelData(excelFile, prop);
 		} catch (ShortCircuit e) {
-			System.out.println(e.getExceptionMessage());
+			System.out.println(e.getMessage());
+		} catch (ExcelReaderException e) {
+			e.printStackTrace();
+			System.out.println(e.getMessage());
 		}
+		System.out.println(excelData.getExcelData().size());
 
 		System.out.println(excelData.getExcelData().size());
 		System.out.println(excelData.getExcelShortCircuit()

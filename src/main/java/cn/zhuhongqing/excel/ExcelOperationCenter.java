@@ -16,6 +16,18 @@ import cn.zhuhongqing.excel.exception.ShortCircuit;
 import cn.zhuhongqing.excel.utils.GenericUtils;
 import cn.zhuhongqing.excel.utils.StringUtils;
 
+/**
+ * 主要进行excel操作
+ * 
+ * 也是对外主要开放的方法
+ * 
+ * 包含异常处理,类型转换处理等
+ * 
+ * @author zhq mail:qwepoidjdj(a)hotmail.com
+ * @since 1.6
+ * 
+ */
+
 public class ExcelOperationCenter {
 
 	/**
@@ -27,15 +39,17 @@ public class ExcelOperationCenter {
 	 * @param comparMap
 	 * @return
 	 * @throws ExcelConvertException
+	 * @throws ExcelReaderException
 	 */
 
 	public static ExcelData resolveAndConvertExcelData(File excelFile,
-			Map<String, String> comparMap) throws ExcelConvertException {
+			Map<String, String> comparMap) throws ExcelConvertException,
+			ExcelReaderException {
 
-		// 不会抛出ShortCircuit
+		// 不会抛出ShortCircuitF
 		try {
 			return resolveAndConvertAndCheckExcelData(excelFile, comparMap,
-					ExcelOperationType.ConvertThrow);
+					true, ExcelOperationType.ConvertThrow);
 		} catch (ShortCircuit e) {
 			throw new ExcelConvertException(e);
 		}
@@ -54,36 +68,61 @@ public class ExcelOperationCenter {
 	 * @param comparMap
 	 * @return
 	 * @throws ShortCircuit
+	 * @throws ExcelReaderException
 	 */
 
 	public static ExcelData resolveAndConvertAndCheckExcelData(File excelFile,
-			Map<String, String> comparMap) throws ShortCircuit {
+			Map<String, String> comparMap) throws ShortCircuit,
+			ExcelReaderException {
 
 		// 不会抛出ExcelConvertException
 		try {
 			return resolveAndConvertAndCheckExcelData(excelFile, comparMap,
-					ExcelOperationType.ConvertCatch);
+					true, ExcelOperationType.ConvertCatch);
 		} catch (ExcelConvertException e) {
 			throw new ShortCircuit(e);
 		}
 	}
 
+	/**
+	 * 将excel数据读出来并转换成List<Map<String,Object>>
+	 * 
+	 * 并进行一些操作:
+	 * 
+	 * 底层数据不会过滤空 也不会trim 故这里要做一些处理
+	 * 
+	 * @param excelFile
+	 *            excel文件
+	 * @param comparMap
+	 *            列名头key匹配
+	 * @param checkcompar
+	 *            是否检测列名key一致性
+	 * @param excelOperationType
+	 * 
+	 * @return
+	 * @throws ShortCircuit
+	 * @throws ExcelConvertException
+	 * @throws ExcelReaderException
+	 */
+
 	private static ExcelData resolveAndConvertAndCheckExcelData(File excelFile,
-			Map<String, String> comparMap, ExcelOperationType excelOperationType)
-			throws ShortCircuit, ExcelConvertException {
+			Map<String, String> comparMap, boolean checkcompar,
+			ExcelOperationType excelOperationType) throws ShortCircuit,
+			ExcelConvertException, ExcelReaderException {
 
 		ExcelData excelData = new ExcelData();
 		ExcelConvertCenter excelConvertCenter = initExcelConvertCenter(comparMap);
 		ExcelShortCircuit excelShortCircuit = initShortCircuit(comparMap);
 
 		List<Map<String, Cell>> cellList = ExcelDataQuerier.getCellList(
-				excelFile, comparMap);
+				excelFile, comparMap, checkcompar);
 
 		List<Map<String, Object>> colList = new ArrayList<Map<String, Object>>();
 
 		Iterator<Map<String, Cell>> cellItr = cellList.iterator();
 		while (cellItr.hasNext()) {
 			Map<String, Cell> cellMap = cellItr.next();
+			// 过滤空的map
 			if (cellMap.isEmpty()) {
 				continue;
 			}
@@ -102,7 +141,7 @@ public class ExcelOperationCenter {
 					continue;
 				}
 				try {
-					colMap.put(GenericUtils.splitFirstUpSubLine(cellName, "_"),
+					colMap.put(GenericUtils.createPropName(cellName),
 							excelConvertCenter.excelToJava(cellName,
 									orginCellValue));
 				} catch (ExcelConvertException e) {
@@ -175,9 +214,10 @@ public class ExcelOperationCenter {
 	 * @param comparMap
 	 *            头文件对应
 	 * @return
+	 * @throws ExcelReaderException
 	 */
 	public static ExcelData resolveExcelData(File excelFile,
-			Map<String, String> comparMap) {
+			Map<String, String> comparMap) throws ExcelReaderException {
 		ExcelData excelData = new ExcelData();
 		excelData.setExcelData(ExcelDataQuerier.getValueList(excelFile,
 				comparMap));

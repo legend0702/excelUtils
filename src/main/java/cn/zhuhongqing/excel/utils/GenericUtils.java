@@ -267,6 +267,19 @@ public class GenericUtils {
 	}
 
 	/**
+	 * 主要处理key名字
+	 * 
+	 * 把不符合项目的名字转换成项目中需要的名字
+	 * 
+	 * @param propName
+	 * @return
+	 */
+
+	public static String createPropName(String propName) {
+		return propName;
+	}
+
+	/**
 	 * 正则匹配数字
 	 * 
 	 * 整数以及99个小数..
